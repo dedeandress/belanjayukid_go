@@ -41,6 +41,8 @@ func AddToCart(request *params.TransactionRequest) params.Response {
 			})
 	}
 
+	// check stock is exist logic
+	// if exist add transaction detail to db
 	err = transactionRepo.Update(transactionDetails)
 	if err != nil {
 		return createResponseError(
@@ -51,10 +53,24 @@ func AddToCart(request *params.TransactionRequest) params.Response {
 			})
 	}
 
+	//if not exist throw list of product that are out of stock
+
 	return createResponseSuccess(ResponseService{
 		Payload:  transactionDetails,
 		CommitDB: true,
 	})
+}
+
+func finishTransaction() {
+
+	//final check stock
+
+	//if still have product out of stock throw error list of product that are out of stock
+
+	//if don't have product out of stock
+	//do decrease product stock based on product on transaction detail list
+
+	//update transaction status
 }
 
 func mapToModels(request *params.TransactionRequest) ([]models.TransactionDetail, error){
