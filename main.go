@@ -1,9 +1,9 @@
 package main
 
 import (
-	"go_sample_login_register/http/server"
-	"go_sample_login_register/repositories"
-	"go_sample_login_register/validators"
+	"belanjayukid_go/http/server"
+	"belanjayukid_go/repositories"
+	"belanjayukid_go/validators"
 
 	"log"
 )

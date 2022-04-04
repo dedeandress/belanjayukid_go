@@ -1,9 +1,9 @@
 package handlers
 
 import (
+	"belanjayukid_go/enums"
+	"belanjayukid_go/params"
 	"encoding/json"
-	"go_sample_login_register/enums"
-	"go_sample_login_register/params"
 	"net/http"
 
 	"github.com/gorilla/mux"

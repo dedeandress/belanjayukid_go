@@ -1,7 +1,7 @@
 package params
 
 import (
-	"go_sample_login_register/enums"
+	"belanjayukid_go/enums"
 	"net/http"
 )
 

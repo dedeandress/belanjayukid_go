@@ -1,10 +1,10 @@
 package services
 
 import (
-	"go_sample_login_register/enums"
-	"go_sample_login_register/models"
-	"go_sample_login_register/params"
-	"go_sample_login_register/repositories"
+	"belanjayukid_go/enums"
+	"belanjayukid_go/models"
+	"belanjayukid_go/params"
+	"belanjayukid_go/repositories"
 )
 
 type ResponseService struct {

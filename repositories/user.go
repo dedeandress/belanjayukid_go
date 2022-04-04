@@ -1,9 +1,8 @@
 package repositories
 
 import (
-	"go_sample_login_register/models"
-
-	"github.com/jinzhu/gorm"
+	"belanjayukid_go/models"
+	"gorm.io/gorm"
 )
 
 type UserRepository interface {

@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"go_sample_login_register/crypto"
-	"go_sample_login_register/params"
-	"go_sample_login_register/services"
+	"belanjayukid_go/crypto"
+	"belanjayukid_go/params"
+	"belanjayukid_go/services"
 	"net/http"
 )
 

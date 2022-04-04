@@ -1,6 +1,6 @@
 package params
 
-import "go_sample_login_register/validators"
+import "belanjayukid_go/validators"
 
 type LoginRequest struct {
 	Email    string `json:"email" validate:"required"`

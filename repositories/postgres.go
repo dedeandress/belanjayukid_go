@@ -1,14 +1,16 @@
 package repositories
 
 import (
+	"belanjayukid_go/configs"
+	"belanjayukid_go/models"
 	"fmt"
-	"go_sample_login_register/configs"
-	"go_sample_login_register/models"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"strconv"
 	"time"
 
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	_ "gorm.io/driver/postgres"
 )
 
 var (
@@ -69,22 +71,34 @@ func migrateDatabase() error {
 	DB.Model(models.User{})
 	DB.AutoMigrate(
 		models.User{},
+		models.Category{},
+		models.ProductUnit{},
+		models.Product{},
+		models.ProductDetail{},
+		models.Transaction{},
+		models.TransactionDetail{},
 	)
 
 	return nil
 }
 
 func databaseConnection(url string, sslMode string, logMode bool) (*DataSource, error) {
-	db, err := gorm.Open("postgres", fmt.Sprintf("%s?sslmode=%s", url, sslMode))
+	dsn := fmt.Sprintf("%s?sslmode=%s", url, sslMode)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
 		return nil, err
 	}
-	db.LogMode(logMode)
 	maxLifetime := 10 * time.Second
 	maxIdle, maxOpenConnection := 5, 5
-	db.DB().SetMaxIdleConns(maxIdle)
-	db.DB().SetMaxOpenConns(maxOpenConnection)
-	db.DB().SetConnMaxLifetime(maxLifetime)
+	sqlDB, err :=db.DB()
+	if err != nil {
+		panic(err.Error())
+	}
+	sqlDB.SetMaxIdleConns(maxIdle)
+	sqlDB.SetMaxOpenConns(maxOpenConnection)
+	sqlDB.SetConnMaxLifetime(maxLifetime)
 	return &DataSource{db, maxIdle, maxOpenConnection, maxLifetime}, nil
 }
 

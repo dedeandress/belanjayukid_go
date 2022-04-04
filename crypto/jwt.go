@@ -1,9 +1,9 @@
 package crypto
 
 import (
+	"belanjayukid_go/enums"
 	"errors"
 	"fmt"
-	"go_sample_login_register/enums"
 	"net/http"
 	"os"
 	"strings"

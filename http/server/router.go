@@ -1,7 +1,7 @@
 package server
 
 import (
-	"go_sample_login_register/http/server/handlers"
+	"belanjayukid_go/http/server/handlers"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -20,5 +20,9 @@ func routePost(router *mux.Router) {
 	router.HandleFunc("/v1/auth/login", handlers.HandleLogin).Methods(http.MethodPost)
 	router.HandleFunc("/v1/auth/register", handlers.HandleRegister).Methods(http.MethodPost)
 	router.HandleFunc("/v1/me", handlers.Auth(handlers.HandleGetMe)).Methods(http.MethodGet)
+
+	//transaction
+	router.HandleFunc("/v1/transactions", handlers.HandleInitTransaction).Methods(http.MethodPost)
+	router.HandleFunc("/v1/transactions", handlers.HandleAddToCartTransaction).Methods(http.MethodPatch)
 
 }

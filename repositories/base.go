@@ -1,9 +1,9 @@
 package repositories
 
 import (
+	"gorm.io/gorm"
 	"strings"
 
-	"github.com/jinzhu/gorm"
 )
 
 func makeFilterFunc(query interface{}, args ...interface{}) func(db *gorm.DB) *gorm.DB {

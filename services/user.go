@@ -1,13 +1,13 @@
 package services
 
 import (
-	"go_sample_login_register/crypto"
-	"go_sample_login_register/enums"
-	"go_sample_login_register/models"
-	"go_sample_login_register/params"
-	"go_sample_login_register/repositories"
+	"belanjayukid_go/crypto"
+	"belanjayukid_go/enums"
+	"belanjayukid_go/models"
+	"belanjayukid_go/params"
+	"belanjayukid_go/repositories"
+	"gorm.io/gorm"
 
-	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 )
 
