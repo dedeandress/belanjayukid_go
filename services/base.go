@@ -38,5 +38,5 @@ func createResponseError(response ResponseService) params.Response {
 		}
 	}
 
-	return params.NewErrorResponse(response.ResultCode)
+	return params.NewErrorResponse(response.ResultCode, response.Payload)
 }

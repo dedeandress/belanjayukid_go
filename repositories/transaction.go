@@ -5,6 +5,7 @@ import (
 	"belanjayukid_go/models"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"time"
 )
@@ -12,6 +13,7 @@ import (
 type TransactionRepository interface {
 	Insert()(transaction *models.Transaction, err error)
 	Update(transactionDetails []models.TransactionDetail) (err error)
+	GetTransactionDetailByTransactionID(transactionID string) (*[]models.TransactionDetail, error)
 	UpdateTrxStatus(transactionID string, status int) (err error)
 	UpdateTrxTotalPrice(transactionID string, totalPrice decimal.Decimal) (err error)
 }
@@ -59,4 +61,17 @@ func (t *transactionRepository) UpdateTrxStatus(transactionID string, status int
 func (t *transactionRepository) UpdateTrxTotalPrice(transactionID string, totalPrice decimal.Decimal) (err error) {
 	err = transactionRepo.db.Model(models.Transaction{}).Where("id = ?", transactionID).Update("total_price", totalPrice).Error
 	return err
+}
+
+func (t *transactionRepository) GetTransactionDetailByTransactionID(transactionID string) (*[]models.TransactionDetail, error) {
+	var transactionDetails *[]models.TransactionDetail
+	res := transactionRepo.db.Model(models.TransactionDetail{}).Preload("Transaction").Preload("ProductDetail").Scopes(filterTransactionDetailsByTransactionID(transactionID)).Find(&transactionDetails)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	return transactionDetails, nil
+}
+
+func filterTransactionDetailsByTransactionID(transactionID string) func(db *gorm.DB) *gorm.DB {
+	return makeFilterFunc("transaction_details.transaction_id = ?", transactionID)
 }

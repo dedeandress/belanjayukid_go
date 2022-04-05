@@ -44,11 +44,13 @@ type ProductDetailResponse struct {
 }
 
 type ProductOutOfStock struct {
-	AvailableStock int
-	Detail []ProductDetailOutOfStock
+	ProductID *string `json:"product_id"`
+	Name *string `json:"name"`
+	AvailableStock int `json:"available_stock"`
+	Detail []ProductDetailOutOfStock `json:"detail"`
 }
 
 type ProductDetailOutOfStock struct {
-	ProductUnit string
-	AvailableStock int
+	ProductUnit string `json:"product_unit"`
+	AvailableStock int `json:"available_stock"`
 }

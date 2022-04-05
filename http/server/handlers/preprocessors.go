@@ -11,7 +11,7 @@ func Auth(handlerFunc http.HandlerFunc) http.HandlerFunc {
 	preprocessedHandler := func(responseWriter http.ResponseWriter, request *http.Request) {
 		payload, resultCode, err := crypto.GetHttpRequestAuthorizationClaim(request)
 		if err != nil {
-			ToJSON(responseWriter, resultCode.HttpStatusCode(), params.NewErrorResponse(resultCode))
+			ToJSON(responseWriter, resultCode.HttpStatusCode(), params.NewErrorResponse(resultCode, nil))
 			return
 		}
 

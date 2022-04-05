@@ -20,8 +20,8 @@ const (
 )
 
 func init() {
-	badRequestResponse = params.NewErrorResponse(enums.BAD_REQUEST)
-	internalServerErrorResponse = params.NewErrorResponse(enums.INTERNAL_SERVER_ERROR)
+	badRequestResponse = params.NewErrorResponse(enums.BAD_REQUEST, nil)
+	internalServerErrorResponse = params.NewErrorResponse(enums.INTERNAL_SERVER_ERROR, nil)
 	decoder = schema.NewDecoder()
 }
 

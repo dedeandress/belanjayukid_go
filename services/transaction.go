@@ -145,17 +145,17 @@ func AddToCart(request *params.TransactionRequest) params.Response {
 	})
 }
 
-func FinishTransaction(request params.TransactionRequest) params.Response{
+func FinishTransaction(transactionID string) params.Response{
 	repositories.BeginTransaction()
 	transactionRepo := repositories.GetTransactionRepository()
 	productRepo := repositories.GetProductRepository()
 
 	//final check stock
 	finishTransactionResponse := params.FinishTransactionResponse{
-		TransactionID: request.TransactionID,
+		TransactionID: transactionID,
 	}
 	productOutOfStockList := make([]params.ProductOutOfStock, 0)
-	transactionDetails, err := mapToModels(&request)
+	transactionDetails, err := transactionRepo.GetTransactionDetailByTransactionID(transactionID)
 	if err != nil {
 		return createResponseError(
 			ResponseService{
@@ -165,7 +165,7 @@ func FinishTransaction(request params.TransactionRequest) params.Response{
 			})
 	}
 
-	for _, trxDetail := range transactionDetails {
+	for _, trxDetail := range *transactionDetails {
 		productDetail, err := productRepo.GetProductDetailByProductDetailID(trxDetail.ProductDetailID.String())
 		if err != nil {
 			return createResponseError(
@@ -191,7 +191,10 @@ func FinishTransaction(request params.TransactionRequest) params.Response{
 
 			productDetailOutOfStockList = append(productDetailOutOfStockList, productDetailOutOfStock)
 
+			productID := productDetail.ProductID.String()
 			productOutOfStockList = append(productOutOfStockList, params.ProductOutOfStock{
+				Name: &productDetail.Product.Name,
+				ProductID: &productID,
 				AvailableStock: productDetail.Product.Stock,
 				Detail: productDetailOutOfStockList,
 			})
@@ -208,7 +211,7 @@ func FinishTransaction(request params.TransactionRequest) params.Response{
 	}
 
 	//do decrease product stock based on product on transaction detail list
-	for _, trxDetail := range transactionDetails{
+	for _, trxDetail := range *transactionDetails{
 		productDetail, err := productRepo.GetProductDetailByProductDetailID(trxDetail.ProductDetailID.String())
 		if err != nil {
 			return createResponseError(
@@ -237,7 +240,7 @@ func FinishTransaction(request params.TransactionRequest) params.Response{
 	}
 
 	//update transaction status to 2 (FINISH_TRANSACTION)
-	err = transactionRepo.UpdateTrxStatus(request.TransactionID, enums.FINISH_TRANSACTION)
+	err = transactionRepo.UpdateTrxStatus(transactionID, enums.FINISH_TRANSACTION)
 	if err != nil{
 		return createResponseError(
 			ResponseService{

@@ -50,7 +50,7 @@ func NewSuccessResponse(payload interface{}) Response {
 	}
 }
 
-func NewErrorResponse(resultCode enums.ResultCode) Response {
+func NewErrorResponse(resultCode enums.ResultCode, payload interface{}) Response {
 	return Response{
 		Status:   ERROR_STATUS,
 		HttpCode: resultCode.HttpStatusCode(),
@@ -59,6 +59,7 @@ func NewErrorResponse(resultCode enums.ResultCode) Response {
 			Title:  resultCode.HttpStatusText(),
 			Detail: resultCode.Description(),
 		},
+		Payload: payload,
 	}
 }
 

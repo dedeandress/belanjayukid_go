@@ -3,6 +3,7 @@ package handlers
 import (
 	"belanjayukid_go/params"
 	"belanjayukid_go/services"
+	"github.com/gorilla/mux"
 	"net/http"
 )
 
@@ -25,14 +26,9 @@ func HandleInitTransaction(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleFinishTransaction(w http.ResponseWriter, r *http.Request) {
-	reqBody := params.TransactionRequest{}
+	muxParams := mux.Vars(r)
+	transactionID := muxParams["transactionID"]
 
-	err := BindJSON(r, &reqBody)
-	if err != nil {
-		ToJSON(w, http.StatusBadRequest, badRequestResponse)
-		return
-	}
-
-	response := services.FinishTransaction(reqBody)
+	response := services.FinishTransaction(transactionID)
 	ToJSON(w, response.HttpCode, response)
 }
