@@ -5,6 +5,7 @@ import (
 	"belanjayukid_go/models"
 	"belanjayukid_go/params"
 	"belanjayukid_go/repositories"
+	"fmt"
 	"github.com/google/uuid"
 )
 
@@ -30,8 +31,9 @@ func InitTransaction() params.Response {
 func AddToCart(request *params.TransactionRequest) params.Response {
 	repositories.BeginTransaction()
 	transactionRepo := repositories.GetTransactionRepository()
+	productRepo := repositories.GetProductRepository()
 
-	transactionDetails, err := mapToModels(request)
+	transactionDetailInsertDBList, err := mapToModels(request)
 	if err != nil {
 		return createResponseError(
 			ResponseService{
@@ -41,9 +43,57 @@ func AddToCart(request *params.TransactionRequest) params.Response {
 			})
 	}
 
-	// check stock is exist logic
-	// if exist add transaction detail to db
-	err = transactionRepo.Update(transactionDetails)
+	// check stock is exist and mapping to transactionDetailResponse
+	transactionDetailListResponse := make([]params.TransactionDetailResponse, 0)
+	for index, trxDetails := range transactionDetailInsertDBList {
+
+		productDetail, err := productRepo.GetProductDetailByProductDetailID(trxDetails.ProductDetailID.String())
+		if err != nil {
+			return createResponseError(
+				ResponseService{
+					RollbackDB: true,
+					Error:      err,
+					ResultCode: enums.INTERNAL_SERVER_ERROR,
+				})
+		}
+		transactionDetailResponse := params.TransactionDetailResponse{
+			NumberOfPurchases: trxDetails.NumberOfPurchases,
+			Product: params.ProductDetailResponse{
+				Name: productDetail.Product.Name,
+				SKU: productDetail.Product.SKU,
+			},
+			ProductUnit: productDetail.ProductUnit.Name,
+		}
+
+		fmt.Printf("%s %s %d\n", productDetail.ID, productDetail.Product.Name, productDetail.Product.Stock)
+
+		numberOfPurchases := trxDetails.NumberOfPurchases * productDetail.QuantityPerUnit
+		availableStock := productDetail.Product.Stock / productDetail.QuantityPerUnit
+
+		if availableStock < numberOfPurchases {
+			productDetailOutOfStockList := make([]params.ProductDetailOutOfStock, 0)
+			//TODO: search all available stock on product detail
+			productDetailOutOfStock := params.ProductDetailOutOfStock{
+				ProductUnit: productDetail.ProductUnit.Name,
+				AvailableStock: availableStock,
+			}
+
+			productDetailOutOfStockList = append(productDetailOutOfStockList, productDetailOutOfStock)
+
+			transactionDetailResponse.ProductOutOfStock = &params.ProductOutOfStock{
+				AvailableStock: productDetail.Product.Stock,
+				Detail: productDetailOutOfStockList,
+			}
+
+			//delete the out-of-stock product from transaction details insert db list
+			transactionDetailInsertDBList = append(transactionDetailInsertDBList[:index], transactionDetailInsertDBList[index+1:]...)
+		}
+
+		transactionDetailListResponse = append(transactionDetailListResponse, transactionDetailResponse)
+	}
+
+	// insert the transaction detail
+	err = transactionRepo.Update(transactionDetailInsertDBList)
 	if err != nil {
 		return createResponseError(
 			ResponseService{
@@ -53,10 +103,13 @@ func AddToCart(request *params.TransactionRequest) params.Response {
 			})
 	}
 
-	//if not exist throw list of product that are out of stock
+	response := params.TransactionResponse{
+		TransactionID: request.TransactionID,
+		TransactionDetails: transactionDetailListResponse,
+	}
 
 	return createResponseSuccess(ResponseService{
-		Payload:  transactionDetails,
+		Payload:  response,
 		CommitDB: true,
 	})
 }

@@ -11,6 +11,7 @@ type ProductDetail struct {
 	ProductUnit *ProductUnit `gorm:"foreignKey:ProductUnitID;references:ID"`
 	SellingPrice decimal.Decimal `gorm:"type:decimal(20,8)"`
 	PurchasePrice decimal.Decimal `gorm:"type:decimal(20,8)"`
+	QuantityPerUnit int
 	ProductID uuid.UUID
 	ProductUnitID uuid.UUID
 }

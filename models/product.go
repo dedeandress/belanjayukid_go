@@ -6,7 +6,7 @@ type Product struct {
 	ID uuid.UUID `gorm:"NOT NULL;PRIMARY_KEY"`
 	SKU string
 	Name string
-	Stock string
+	Stock int
 	CategoryID string
 	ImageURL string
 }
