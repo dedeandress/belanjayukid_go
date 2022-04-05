@@ -23,3 +23,16 @@ func HandleInitTransaction(w http.ResponseWriter, r *http.Request) {
 	response := services.InitTransaction()
 	ToJSON(w, response.HttpCode, response)
 }
+
+func HandleFinishTransaction(w http.ResponseWriter, r *http.Request) {
+	reqBody := params.TransactionRequest{}
+
+	err := BindJSON(r, &reqBody)
+	if err != nil {
+		ToJSON(w, http.StatusBadRequest, badRequestResponse)
+		return
+	}
+
+	response := services.FinishTransaction(reqBody)
+	ToJSON(w, response.HttpCode, response)
+}

@@ -18,6 +18,7 @@ const (
 	USER_NOT_FOUND        ResultCode = 1005
 	USER_ALREADY_EXIST    ResultCode = 1006
 	WRONG_EMAIL_PASSWORD  ResultCode = 1007
+	PRODUCT_OUT_OF_STOCK  ResultCode = 1008
 )
 
 func (resultCode ResultCode) HttpStatusCode() int {
@@ -40,6 +41,8 @@ func (resultCode ResultCode) HttpStatusCode() int {
 		return http.StatusConflict
 	case USER_NOT_FOUND:
 		return http.StatusNotFound
+	case PRODUCT_OUT_OF_STOCK:
+		return http.StatusConflict
 	default:
 		return http.StatusInternalServerError
 	}
@@ -72,6 +75,8 @@ func (resultCode ResultCode) Description() string {
 		return "User not found"
 	case WRONG_EMAIL_PASSWORD:
 		return "Wrong Email/Password"
+	case PRODUCT_OUT_OF_STOCK:
+		return "Please check again on cart you have product out of stock"
 	default:
 		return "Internal Server Error"
 	}

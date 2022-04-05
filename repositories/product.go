@@ -7,6 +7,7 @@ import (
 
 type ProductRepository interface {
 	GetProductDetailByProductDetailID(productDetailID string)(productDetail *models.ProductDetail, err error)
+	UpdateStock(productID string, stock int)(err error)
 }
 
 type productRepository struct {
@@ -33,6 +34,11 @@ func (p productRepository) GetProductDetailByProductDetailID(productDetailID str
 		return nil, err
 	}
 	return productDetail, err
+}
+
+func (p productRepository) UpdateStock(productID string, stock int) (err error) {
+	err = productRepo.db.Model(models.Product{}).Where("id = ?", productID).Update("stock", stock).Error
+	return err
 }
 
 func filterByProductDetailID(productDetailID string) func(db *gorm.DB) *gorm.DB {

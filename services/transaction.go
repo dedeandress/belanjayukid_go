@@ -112,7 +112,7 @@ func AddToCart(request *params.TransactionRequest) params.Response {
 	}
 
 	//update transaction status to 1 (IN_PROGRESS)
-	err = transactionRepo.UpdateTrxStatus(request.TransactionID, 1)
+	err = transactionRepo.UpdateTrxStatus(request.TransactionID, enums.IN_PROGRESS_TRANSACTION)
 	if err != nil{
 		return createResponseError(
 			ResponseService{
@@ -145,16 +145,112 @@ func AddToCart(request *params.TransactionRequest) params.Response {
 	})
 }
 
-func finishTransaction() {
+func FinishTransaction(request params.TransactionRequest) params.Response{
+	repositories.BeginTransaction()
+	transactionRepo := repositories.GetTransactionRepository()
+	productRepo := repositories.GetProductRepository()
 
 	//final check stock
+	finishTransactionResponse := params.FinishTransactionResponse{
+		TransactionID: request.TransactionID,
+	}
+	productOutOfStockList := make([]params.ProductOutOfStock, 0)
+	transactionDetails, err := mapToModels(&request)
+	if err != nil {
+		return createResponseError(
+			ResponseService{
+				RollbackDB: true,
+				Error:      err,
+				ResultCode: enums.INTERNAL_SERVER_ERROR,
+			})
+	}
 
-	//if still have product out of stock throw error list of product that are out of stock
+	for _, trxDetail := range transactionDetails {
+		productDetail, err := productRepo.GetProductDetailByProductDetailID(trxDetail.ProductDetailID.String())
+		if err != nil {
+			return createResponseError(
+				ResponseService{
+					RollbackDB: true,
+					Error:      err,
+					ResultCode: enums.INTERNAL_SERVER_ERROR,
+				})
+		}
 
-	//if don't have product out of stock
+		fmt.Printf("%s %s %d\n", productDetail.ID, productDetail.Product.Name, productDetail.Product.Stock)
+
+		numberOfPurchases := trxDetail.NumberOfPurchases * productDetail.QuantityPerUnit
+		availableStock := productDetail.Product.Stock / productDetail.QuantityPerUnit
+
+		if availableStock < numberOfPurchases {
+			productDetailOutOfStockList := make([]params.ProductDetailOutOfStock, 0)
+			//TODO: search all available stock on product detail
+			productDetailOutOfStock := params.ProductDetailOutOfStock{
+				ProductUnit: productDetail.ProductUnit.Name,
+				AvailableStock: availableStock,
+			}
+
+			productDetailOutOfStockList = append(productDetailOutOfStockList, productDetailOutOfStock)
+
+			productOutOfStockList = append(productOutOfStockList, params.ProductOutOfStock{
+				AvailableStock: productDetail.Product.Stock,
+				Detail: productDetailOutOfStockList,
+			})
+		}
+	}
+
+	if len(productOutOfStockList) != 0 {
+		finishTransactionResponse.ProductOutOfStock = &productOutOfStockList
+		return createResponseError(ResponseService{
+			Payload: finishTransactionResponse,
+			ResultCode: enums.PRODUCT_OUT_OF_STOCK,
+			RollbackDB: true,
+		})
+	}
+
 	//do decrease product stock based on product on transaction detail list
+	for _, trxDetail := range transactionDetails{
+		productDetail, err := productRepo.GetProductDetailByProductDetailID(trxDetail.ProductDetailID.String())
+		if err != nil {
+			return createResponseError(
+				ResponseService{
+					RollbackDB: true,
+					Error:      err,
+					ResultCode: enums.INTERNAL_SERVER_ERROR,
+				})
+		}
 
-	//update transaction status
+		fmt.Printf("%s %s %d\n", productDetail.ID, productDetail.Product.Name, productDetail.Product.Stock)
+
+		numberOfPurchases := trxDetail.NumberOfPurchases * productDetail.QuantityPerUnit
+		currentStock := productDetail.Product.Stock
+		updateStock := currentStock - numberOfPurchases
+
+		err = productRepo.UpdateStock(productDetail.ProductID.String(), updateStock)
+		if err != nil {
+			return createResponseError(
+				ResponseService{
+					RollbackDB: true,
+					Error:      err,
+					ResultCode: enums.INTERNAL_SERVER_ERROR,
+				})
+		}
+	}
+
+	//update transaction status to 2 (FINISH_TRANSACTION)
+	err = transactionRepo.UpdateTrxStatus(request.TransactionID, enums.FINISH_TRANSACTION)
+	if err != nil{
+		return createResponseError(
+			ResponseService{
+				RollbackDB: true,
+				Error:      err,
+				ResultCode: enums.INTERNAL_SERVER_ERROR,
+			})
+	}
+
+	return createResponseSuccess(ResponseService{
+		Payload: finishTransactionResponse,
+		CommitDB: true,
+	})
 }
 
 func mapToModels(request *params.TransactionRequest) ([]models.TransactionDetail, error){
@@ -165,11 +261,18 @@ func mapToModels(request *params.TransactionRequest) ([]models.TransactionDetail
 
 	transactionDetails := make([]models.TransactionDetail, 0)
 	for _, details := range request.TransactionDetails{
+		transactionDetailID := uuid.New()
+		if details.TransactionDetailID != nil {
+			transactionDetailID, err = uuid.Parse(*details.TransactionDetailID)
+			if err != nil {
+				return nil, err
+			}
+		}
 		productDetailID, err := uuid.Parse(details.ProductDetailID)
 		if err != nil {
 			return nil, err
 		}
-		transactionDetail := models.TransactionDetail{ID: uuid.New(), TransactionID: transactionID, NumberOfPurchases: details.NumberOfPurchases, ProductDetailID: productDetailID}
+		transactionDetail := models.TransactionDetail{ID: transactionDetailID, TransactionID: transactionID, NumberOfPurchases: details.NumberOfPurchases, ProductDetailID: productDetailID}
 		transactionDetails = append(transactionDetails, transactionDetail)
 	}
 

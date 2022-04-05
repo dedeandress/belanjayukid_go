@@ -1,0 +1,7 @@
+package enums
+
+const (
+	INIT_TRANSACTION = 0
+	IN_PROGRESS_TRANSACTION = 1
+	FINISH_TRANSACTION = 2
+)

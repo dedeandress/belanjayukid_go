@@ -1,9 +1,11 @@
 package repositories
 
 import (
+	"belanjayukid_go/enums"
 	"belanjayukid_go/models"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	"gorm.io/gorm/clause"
 	"time"
 )
 
@@ -32,14 +34,18 @@ func GetTransactionRepository() TransactionRepository {
 
 func (t *transactionRepository) Insert() (transaction *models.Transaction, err error)  {
 	transaction = &models.Transaction{}
-	if err := transactionRepo.db.Create(models.Transaction{ID: uuid.New(), Date: time.Now(), Status: 0, TotalPrice: decimal.NewFromInt(0)}).Scan(&transaction).Error; err != nil {
+	if err := transactionRepo.db.Create(models.Transaction{ID: uuid.New(), Date: time.Now(), Status: enums.INIT_TRANSACTION, TotalPrice: decimal.NewFromInt(0)}).Scan(&transaction).Error; err != nil {
 		return nil, err
 	}
 	return transaction, err
 }
 
 func (t *transactionRepository) Update(transactionDetails []models.TransactionDetail) (err error) {
-	err = transactionRepo.db.Create(&transactionDetails).Error
+	err = transactionRepo.db.Clauses(
+		clause.OnConflict{
+			Columns: []clause.Column{{Name: "id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"number_of_purchases"}),
+		}).Create(&transactionDetails).Error
 	return err
 }
 

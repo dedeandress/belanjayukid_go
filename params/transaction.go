@@ -11,6 +11,7 @@ type TransactionRequest struct {
 }
 
 type transactionDetailRequest struct {
+	TransactionDetailID *string `json:"transaction_detail_id"`
 	ProductDetailID string `json:"product_detail_id"`
 	NumberOfPurchases int `json:"number_of_purchases"`
 }
@@ -26,10 +27,15 @@ type TransactionResponse struct {
 }
 
 type TransactionDetailResponse struct {
-	NumberOfPurchases int
-	Product ProductDetailResponse
-	ProductUnit string
-	ProductOutOfStock *ProductOutOfStock
+	NumberOfPurchases int `json:"number_of_purchases"`
+	Product ProductDetailResponse `json:"product"`
+	ProductUnit string `json:"product_unit"`
+	ProductOutOfStock *ProductOutOfStock `json:"product_out_of_stock"`
+}
+
+type FinishTransactionResponse struct {
+	TransactionID string `json:"transaction_id"`
+	ProductOutOfStock *[]ProductOutOfStock `json:"product_out_of_stock"`
 }
 
 type ProductDetailResponse struct {
