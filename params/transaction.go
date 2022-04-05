@@ -1,6 +1,9 @@
 package params
 
-import "belanjayukid_go/validators"
+import (
+	"belanjayukid_go/validators"
+	"github.com/shopspring/decimal"
+)
 
 type TransactionRequest struct {
 	TransactionID string `json:"transaction_id"`
@@ -19,6 +22,7 @@ func (request TransactionRequest) Validate() error {
 type TransactionResponse struct {
 	TransactionID string `json:"transaction_id"`
 	TransactionDetails []TransactionDetailResponse `json:"transaction_details"`
+	TotalPrice decimal.Decimal `json:"total_price"`
 }
 
 type TransactionDetailResponse struct {

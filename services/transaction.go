@@ -7,6 +7,7 @@ import (
 	"belanjayukid_go/repositories"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 )
 
 func InitTransaction() params.Response {
@@ -32,6 +33,8 @@ func AddToCart(request *params.TransactionRequest) params.Response {
 	repositories.BeginTransaction()
 	transactionRepo := repositories.GetTransactionRepository()
 	productRepo := repositories.GetProductRepository()
+
+	totalPrice := decimal.NewFromInt(0)
 
 	transactionDetailInsertDBList, err := mapToModels(request)
 	if err != nil {
@@ -89,6 +92,11 @@ func AddToCart(request *params.TransactionRequest) params.Response {
 			transactionDetailInsertDBList = append(transactionDetailInsertDBList[:index], transactionDetailInsertDBList[index+1:]...)
 		}
 
+		if availableStock >= numberOfPurchases {
+			subTotalPrice := productDetail.SellingPrice.Mul(decimal.NewFromInt(int64(trxDetails.NumberOfPurchases)))
+			totalPrice = totalPrice.Add(subTotalPrice)
+		}
+
 		transactionDetailListResponse = append(transactionDetailListResponse, transactionDetailResponse)
 	}
 
@@ -103,9 +111,32 @@ func AddToCart(request *params.TransactionRequest) params.Response {
 			})
 	}
 
+	//update transaction status to 1 (IN_PROGRESS)
+	err = transactionRepo.UpdateTrxStatus(request.TransactionID, 1)
+	if err != nil{
+		return createResponseError(
+			ResponseService{
+				RollbackDB: true,
+				Error:      err,
+				ResultCode: enums.INTERNAL_SERVER_ERROR,
+			})
+	}
+
+	//update transaction total price
+	err = transactionRepo.UpdateTrxTotalPrice(request.TransactionID, totalPrice)
+	if err != nil{
+		return createResponseError(
+			ResponseService{
+				RollbackDB: true,
+				Error:      err,
+				ResultCode: enums.INTERNAL_SERVER_ERROR,
+			})
+	}
+
 	response := params.TransactionResponse{
 		TransactionID: request.TransactionID,
 		TransactionDetails: transactionDetailListResponse,
+		TotalPrice: totalPrice,
 	}
 
 	return createResponseSuccess(ResponseService{

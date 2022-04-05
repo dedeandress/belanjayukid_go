@@ -10,6 +10,8 @@ import (
 type TransactionRepository interface {
 	Insert()(transaction *models.Transaction, err error)
 	Update(transactionDetails []models.TransactionDetail) (err error)
+	UpdateTrxStatus(transactionID string, status int) (err error)
+	UpdateTrxTotalPrice(transactionID string, totalPrice decimal.Decimal) (err error)
 }
 
 type transactionRepository struct {
@@ -38,5 +40,17 @@ func (t *transactionRepository) Insert() (transaction *models.Transaction, err e
 
 func (t *transactionRepository) Update(transactionDetails []models.TransactionDetail) (err error) {
 	err = transactionRepo.db.Create(&transactionDetails).Error
+	return err
+}
+
+
+func (t *transactionRepository) UpdateTrxStatus(transactionID string, status int) (err error) {
+	err = transactionRepo.db.Model(models.Transaction{}).Where("id = ?", transactionID).Update("status", status).Error
+	return err
+}
+
+
+func (t *transactionRepository) UpdateTrxTotalPrice(transactionID string, totalPrice decimal.Decimal) (err error) {
+	err = transactionRepo.db.Model(models.Transaction{}).Where("id = ?", transactionID).Update("total_price", totalPrice).Error
 	return err
 }
