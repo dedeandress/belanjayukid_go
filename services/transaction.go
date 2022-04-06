@@ -259,7 +259,7 @@ func FinishTransaction(transactionID string) params.Response{
 func GetTransactionList(request params.GetTransactionListRequest) params.Response{
 	transactionRepo := repositories.GetTransactionRepository()
 
-	transactions, err := transactionRepo.GetTransaction(request.TransactionID, request.Status)
+	transactions, err := transactionRepo.GetTransactionList(request.TransactionID, request.Status)
 	if err != nil {
 		return createResponseError(
 			ResponseService{
@@ -288,6 +288,65 @@ func GetTransactionList(request params.GetTransactionListRequest) params.Respons
 
 	return createResponseSuccess(ResponseService{
 		Payload: transactionListResponse,
+	})
+}
+
+func GetTransactionDetail(transactionID string) params.Response {
+	transactionRepo := repositories.GetTransactionRepository()
+	productRepo := repositories.GetProductRepository()
+
+	transaction, err := transactionRepo.GetTransaction(transactionID)
+	if err != nil {
+		return createResponseError(
+			ResponseService{
+				RollbackDB: true,
+				Error:      err,
+				ResultCode: enums.INTERNAL_SERVER_ERROR,
+			})
+	}
+
+	transactionDetails, err := transactionRepo.GetTransactionDetailByTransactionID(transactionID)
+	if err != nil {
+		return createResponseError(
+			ResponseService{
+				RollbackDB: true,
+				Error:      err,
+				ResultCode: enums.INTERNAL_SERVER_ERROR,
+			})
+	}
+
+	transactionDetailsResponse := make([]params.TransactionDetailResponse, 0)
+	for _, trxDetails := range *transactionDetails {
+		productDetail, err := productRepo.GetProductDetailByProductDetailID(trxDetails.ProductDetailID.String())
+		if err != nil {
+			return createResponseError(
+				ResponseService{
+					RollbackDB: true,
+					Error:      err,
+					ResultCode: enums.INTERNAL_SERVER_ERROR,
+				})
+		}
+		transactionDetailResponse := params.TransactionDetailResponse{
+			Product: params.ProductDetailResponse{
+				Name: productDetail.Product.Name,
+				SKU: productDetail.Product.SKU,
+			},
+			ProductUnit: productDetail.ProductUnit.Name,
+			NumberOfPurchases: trxDetails.NumberOfPurchases,
+		}
+
+		transactionDetailsResponse = append(transactionDetailsResponse, transactionDetailResponse)
+	}
+
+	transactionResponse := params.TransactionResponse{
+		TransactionID: transactionID,
+		Date: &transaction.Date,
+		TotalPrice: transaction.TotalPrice,
+		TransactionDetails: &transactionDetailsResponse,
+	}
+
+	return createResponseSuccess(ResponseService{
+		Payload: transactionResponse,
 	})
 }
 

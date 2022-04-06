@@ -13,7 +13,8 @@ import (
 type TransactionRepository interface {
 	Insert()(transaction *models.Transaction, err error)
 	Update(transactionDetails []models.TransactionDetail) (err error)
-	GetTransaction(transactionID *string, status *int) (*[]models.Transaction, error)
+	GetTransaction(transactionID string) (*models.Transaction, error)
+	GetTransactionList(transactionID *string, status *int) (*[]models.Transaction, error)
 	GetTransactionDetailByTransactionID(transactionID string) (*[]models.TransactionDetail, error)
 	UpdateTrxStatus(transactionID string, status int) (err error)
 	UpdateTrxTotalPrice(transactionID string, totalPrice decimal.Decimal) (err error)
@@ -52,7 +53,6 @@ func (t *transactionRepository) Update(transactionDetails []models.TransactionDe
 	return err
 }
 
-
 func (t *transactionRepository) UpdateTrxStatus(transactionID string, status int) (err error) {
 	err = transactionRepo.db.Model(models.Transaction{}).Where("id = ?", transactionID).Update("status", status).Error
 	return err
@@ -64,6 +64,17 @@ func (t *transactionRepository) UpdateTrxTotalPrice(transactionID string, totalP
 	return err
 }
 
+
+func (t *transactionRepository) GetTransaction(transactionID string) (*models.Transaction, error) {
+	var transaction *models.Transaction
+	res := transactionRepo.db.Scopes(filterTransactionByID(transactionID)).Find(&transaction)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	return transaction, nil
+}
+
 func (t *transactionRepository) GetTransactionDetailByTransactionID(transactionID string) (*[]models.TransactionDetail, error) {
 	var transactionDetails *[]models.TransactionDetail
 	res := transactionRepo.db.Model(models.TransactionDetail{}).Preload("Transaction").Preload("ProductDetail").Scopes(filterTransactionDetailsByTransactionID(transactionID)).Find(&transactionDetails)
@@ -73,7 +84,7 @@ func (t *transactionRepository) GetTransactionDetailByTransactionID(transactionI
 	return transactionDetails, nil
 }
 
-func (t *transactionRepository) GetTransaction(transactionID *string, status *int) (*[]models.Transaction, error) {
+func (t *transactionRepository) GetTransactionList(transactionID *string, status *int) (*[]models.Transaction, error) {
 
 	scopes := make([]func(db *gorm.DB) *gorm.DB, 0)
 	if transactionID != nil {

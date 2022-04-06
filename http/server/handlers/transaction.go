@@ -45,3 +45,11 @@ func HandleGetTransactionList(w http.ResponseWriter, r *http.Request) {
 	response := services.GetTransactionList(reqBody)
 	ToJSON(w, response.HttpCode, response)
 }
+
+func HandleGetTransactionDetail(w http.ResponseWriter, r *http.Request) {
+	muxParams := mux.Vars(r)
+	transactionID := muxParams["transactionID"]
+
+	response := services.GetTransactionDetail(transactionID)
+	ToJSON(w, response.HttpCode, response)
+}

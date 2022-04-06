@@ -23,6 +23,7 @@ func routePost(router *mux.Router) {
 
 	//transaction
 	router.HandleFunc("/v1/transactions", handlers.HandleGetTransactionList).Methods(http.MethodGet)
+	router.HandleFunc("/v1/transactions/{transactionID}", handlers.HandleGetTransactionDetail).Methods(http.MethodGet)
 	router.HandleFunc("/v1/transactions", handlers.HandleInitTransaction).Methods(http.MethodPost)
 	router.HandleFunc("/v1/transactions", handlers.HandleAddToCartTransaction).Methods(http.MethodPatch)
 	router.HandleFunc("/v1/transactions/{transactionID}/finish", handlers.HandleFinishTransaction).Methods(http.MethodPost)
