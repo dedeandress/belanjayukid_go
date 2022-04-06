@@ -1,6 +1,9 @@
 # BelanjaYukID (Point of Sales) Revamp Golang
 ## Under Development ✌️
 
+## Api Docs
+[Apiary]
+
 ## Server
 - TBD
 
@@ -51,3 +54,4 @@ Go Sample Login Register is currently extended with the following Dependency.
    [Go]: <https://golang.org>
    [Postgres]: <https://www.postgresql.org>
    [Heroku]: <http://heroku.com>
+   [Apiary]: <https://belanjayukidgorevamp.docs.apiary.io/#>
