@@ -28,4 +28,7 @@ func routePost(router *mux.Router) {
 	router.HandleFunc("/v1/transactions", handlers.HandleAddToCartTransaction).Methods(http.MethodPatch)
 	router.HandleFunc("/v1/transactions/{transactionID}/finish", handlers.HandleFinishTransaction).Methods(http.MethodPost)
 
+	//category
+	router.HandleFunc("/v1/categories", handlers.HandleCreateCategory).Methods(http.MethodPost)
+	router.HandleFunc("/v1/categories", handlers.HandleGetCategoryList).Methods(http.MethodGet)
 }
