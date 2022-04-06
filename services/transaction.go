@@ -135,7 +135,7 @@ func AddToCart(request *params.TransactionRequest) params.Response {
 
 	response := params.TransactionResponse{
 		TransactionID: request.TransactionID,
-		TransactionDetails: transactionDetailListResponse,
+		TransactionDetails: &transactionDetailListResponse,
 		TotalPrice: totalPrice,
 	}
 
@@ -253,6 +253,41 @@ func FinishTransaction(transactionID string) params.Response{
 	return createResponseSuccess(ResponseService{
 		Payload: finishTransactionResponse,
 		CommitDB: true,
+	})
+}
+
+func GetTransactionList(request params.GetTransactionListRequest) params.Response{
+	transactionRepo := repositories.GetTransactionRepository()
+
+	transactions, err := transactionRepo.GetTransaction(request.Status)
+	if err != nil {
+		return createResponseError(
+			ResponseService{
+				RollbackDB: true,
+				Error:      err,
+				ResultCode: enums.INTERNAL_SERVER_ERROR,
+			})
+	}
+
+	transactionsResponse := make([]params.TransactionResponse, 0)
+	for _, transaction := range *transactions {
+		trxDate := transaction.Date
+
+		transactionResponse := params.TransactionResponse{
+			TransactionID: transaction.ID.String(),
+			TotalPrice: transaction.TotalPrice,
+			Date: &trxDate,
+		}
+
+		transactionsResponse = append(transactionsResponse, transactionResponse)
+	}
+
+	transactionListResponse := params.TransactionListResponse{
+		Transactions: transactionsResponse,
+	}
+
+	return createResponseSuccess(ResponseService{
+		Payload: transactionListResponse,
 	})
 }
 

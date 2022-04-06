@@ -13,6 +13,7 @@ import (
 type TransactionRepository interface {
 	Insert()(transaction *models.Transaction, err error)
 	Update(transactionDetails []models.TransactionDetail) (err error)
+	GetTransaction(status int) (*[]models.Transaction, error)
 	GetTransactionDetailByTransactionID(transactionID string) (*[]models.TransactionDetail, error)
 	UpdateTrxStatus(transactionID string, status int) (err error)
 	UpdateTrxTotalPrice(transactionID string, totalPrice decimal.Decimal) (err error)
@@ -72,6 +73,20 @@ func (t *transactionRepository) GetTransactionDetailByTransactionID(transactionI
 	return transactionDetails, nil
 }
 
+func (t *transactionRepository) GetTransaction(status int) (*[]models.Transaction, error) {
+	var transactions *[]models.Transaction
+	res := transactionRepo.db.Model(models.Transaction{}).Scopes(filterTransactionByStatus(status)).Find(&transactions)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	return transactions, nil
+}
+
 func filterTransactionDetailsByTransactionID(transactionID string) func(db *gorm.DB) *gorm.DB {
 	return makeFilterFunc("transaction_details.transaction_id = ?", transactionID)
+}
+
+func filterTransactionByStatus(status int) func(db *gorm.DB) *gorm.DB {
+	return makeFilterFunc("status = ?", status)
 }

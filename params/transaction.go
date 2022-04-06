@@ -3,6 +3,7 @@ package params
 import (
 	"belanjayukid_go/validators"
 	"github.com/shopspring/decimal"
+	"time"
 )
 
 type TransactionRequest struct {
@@ -16,14 +17,27 @@ type transactionDetailRequest struct {
 	NumberOfPurchases int `json:"number_of_purchases"`
 }
 
+type GetTransactionListRequest struct {
+	Status int `json:"status"`
+}
+
 func (request TransactionRequest) Validate() error {
+	return validators.ValidateInputs(request)
+}
+
+func (request GetTransactionListRequest) Validate() error {
 	return validators.ValidateInputs(request)
 }
 
 type TransactionResponse struct {
 	TransactionID string `json:"transaction_id"`
-	TransactionDetails []TransactionDetailResponse `json:"transaction_details"`
+	TransactionDetails *[]TransactionDetailResponse `json:"transaction_details"`
 	TotalPrice decimal.Decimal `json:"total_price"`
+	Date *time.Time `json:"date"`
+}
+
+type TransactionListResponse struct {
+	Transactions []TransactionResponse `json:"transactions"`
 }
 
 type TransactionDetailResponse struct {
