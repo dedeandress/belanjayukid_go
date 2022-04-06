@@ -18,7 +18,8 @@ type transactionDetailRequest struct {
 }
 
 type GetTransactionListRequest struct {
-	Status int `json:"status"`
+	TransactionID *string `json:"transaction_id"`
+	Status *int `json:"status"`
 }
 
 func (request TransactionRequest) Validate() error {

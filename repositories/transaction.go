@@ -13,7 +13,7 @@ import (
 type TransactionRepository interface {
 	Insert()(transaction *models.Transaction, err error)
 	Update(transactionDetails []models.TransactionDetail) (err error)
-	GetTransaction(status int) (*[]models.Transaction, error)
+	GetTransaction(transactionID *string, status *int) (*[]models.Transaction, error)
 	GetTransactionDetailByTransactionID(transactionID string) (*[]models.TransactionDetail, error)
 	UpdateTrxStatus(transactionID string, status int) (err error)
 	UpdateTrxTotalPrice(transactionID string, totalPrice decimal.Decimal) (err error)
@@ -73,9 +73,18 @@ func (t *transactionRepository) GetTransactionDetailByTransactionID(transactionI
 	return transactionDetails, nil
 }
 
-func (t *transactionRepository) GetTransaction(status int) (*[]models.Transaction, error) {
+func (t *transactionRepository) GetTransaction(transactionID *string, status *int) (*[]models.Transaction, error) {
+
+	scopes := make([]func(db *gorm.DB) *gorm.DB, 0)
+	if transactionID != nil {
+		scopes = append(scopes, filterTransactionByID(*transactionID))
+	}
+	if status != nil {
+		scopes = append(scopes, filterTransactionByStatus(*status))
+	}
+
 	var transactions *[]models.Transaction
-	res := transactionRepo.db.Model(models.Transaction{}).Scopes(filterTransactionByStatus(status)).Find(&transactions)
+	res := transactionRepo.db.Model(models.Transaction{}).Scopes(scopes...).Find(&transactions)
 	if res.Error != nil {
 		return nil, res.Error
 	}
@@ -89,4 +98,8 @@ func filterTransactionDetailsByTransactionID(transactionID string) func(db *gorm
 
 func filterTransactionByStatus(status int) func(db *gorm.DB) *gorm.DB {
 	return makeFilterFunc("status = ?", status)
+}
+
+func filterTransactionByID(transactionID string) func(db *gorm.DB) *gorm.DB {
+	return makeFilterFunc("id = ?", transactionID)
 }

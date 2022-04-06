@@ -259,7 +259,7 @@ func FinishTransaction(transactionID string) params.Response{
 func GetTransactionList(request params.GetTransactionListRequest) params.Response{
 	transactionRepo := repositories.GetTransactionRepository()
 
-	transactions, err := transactionRepo.GetTransaction(request.Status)
+	transactions, err := transactionRepo.GetTransaction(request.TransactionID, request.Status)
 	if err != nil {
 		return createResponseError(
 			ResponseService{
