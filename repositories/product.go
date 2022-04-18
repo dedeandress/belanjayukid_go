@@ -2,10 +2,13 @@ package repositories
 
 import (
 	"belanjayukid_go/models"
+	"github.com/kr/pretty"
 	"gorm.io/gorm"
+	"log"
 )
 
 type ProductRepository interface {
+	GetProductList()([]models.Product, error)
 	GetProductDetailByProductDetailID(productDetailID string)(productDetail *models.ProductDetail, err error)
 	UpdateStock(productID string, stock int)(err error)
 }
@@ -26,6 +29,18 @@ func GetProductRepository() ProductRepository{
 	return productRepo
 }
 
+
+func (p productRepository) GetProductList() ([]models.Product, error) {
+	var productList []models.Product
+	res := productRepo.db.Preload("ProductDetails").Preload("ProductDetails.ProductUnit").Preload("Category").Find(&productList)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	log.Print(pretty.Sprint(productList))
+
+	return productList, nil
+}
 
 func (p productRepository) GetProductDetailByProductDetailID(productDetailID string) (productDetail *models.ProductDetail, err error) {
 	productDetail = &models.ProductDetail{}

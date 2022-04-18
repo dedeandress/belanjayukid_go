@@ -35,4 +35,7 @@ func routePost(router *mux.Router) {
 	//productunit
 	router.HandleFunc("/v1/productunits", handlers.HandleCreateProductUnit).Methods(http.MethodPost)
 	router.HandleFunc("/v1/productunits", handlers.HandleGetProductUnitList).Methods(http.MethodGet)
+
+	//product
+	router.HandleFunc("/v1/products", handlers.HandleGetProductList).Methods(http.MethodGet)
 }

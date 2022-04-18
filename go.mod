@@ -10,6 +10,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/schema v1.2.0
 	github.com/jinzhu/gorm v1.9.16
+	github.com/kr/pretty v0.3.0
 	github.com/shopspring/decimal v1.3.1
 	github.com/stretchr/testify v1.7.1
 	golang.org/x/crypto v0.0.0-20220331220935-ae2d96664a29
@@ -25,6 +26,8 @@ require (
 	github.com/jackc/pgtype v1.7.0 // indirect
 	github.com/jackc/pgx/v4 v4.11.0 // indirect
 	github.com/jinzhu/now v1.1.2 // indirect
+	github.com/kr/text v0.2.0 // indirect
+	github.com/rogpeppe/go-internal v1.8.0 // indirect
 )
 
 require (

@@ -43,7 +43,7 @@ type TransactionListResponse struct {
 
 type TransactionDetailResponse struct {
 	NumberOfPurchases int `json:"number_of_purchases"`
-	Product ProductDetailResponse `json:"product"`
+	Product TransactionProductDetailResponse `json:"product"`
 	ProductUnit string `json:"product_unit"`
 	ProductOutOfStock *ProductOutOfStock `json:"product_out_of_stock"`
 }
@@ -53,7 +53,7 @@ type FinishTransactionResponse struct {
 	ProductOutOfStock *[]ProductOutOfStock `json:"product_out_of_stock"`
 }
 
-type ProductDetailResponse struct {
+type TransactionProductDetailResponse struct {
 	SKU string
 	Name string
 }

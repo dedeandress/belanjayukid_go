@@ -7,6 +7,8 @@ type Product struct {
 	SKU string
 	Name string
 	Stock int
-	CategoryID string
+	CategoryID uuid.UUID
 	ImageURL string
+	ProductDetails []*ProductDetail
+	Category Category
 }

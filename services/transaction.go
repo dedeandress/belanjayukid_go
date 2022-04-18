@@ -61,7 +61,7 @@ func AddToCart(request *params.TransactionRequest) params.Response {
 		}
 		transactionDetailResponse := params.TransactionDetailResponse{
 			NumberOfPurchases: trxDetails.NumberOfPurchases,
-			Product: params.ProductDetailResponse{
+			Product: params.TransactionProductDetailResponse{
 				Name: productDetail.Product.Name,
 				SKU: productDetail.Product.SKU,
 			},
@@ -327,7 +327,7 @@ func GetTransactionDetail(transactionID string) params.Response {
 				})
 		}
 		transactionDetailResponse := params.TransactionDetailResponse{
-			Product: params.ProductDetailResponse{
+			Product: params.TransactionProductDetailResponse{
 				Name: productDetail.Product.Name,
 				SKU: productDetail.Product.SKU,
 			},
