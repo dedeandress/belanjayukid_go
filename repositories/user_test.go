@@ -1,13 +1,17 @@
 package repositories
 
 import (
+	"belanjayukid_go/models"
 	"database/sql"
+	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"go_sample_login_register/models"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"net/url"
+	"regexp"
 	"testing"
 	"time"
 )
@@ -30,10 +34,21 @@ func (s *Suite) SetupSuite() {
 	db, s.mock, err = sqlmock.New()
 	require.NoError(s.T(), err)
 
-	s.DB, err = gorm.Open("postgres", db)
-	require.NoError(s.T(), err)
+	dsn := url.URL{
+		User: url.UserPassword("andresd", "Password01"),
+		Scheme: "postgres",
+		Host: fmt.Sprintf("%s:%d", "localhost", 5432),
+		Path: "postgres",
+	}
+	dialector := postgres.New(postgres.Config{
+		DSN:                  dsn.String(),
+		DriverName:           "postgres",
+		Conn:                 db,
+		PreferSimpleProtocol: true,
+	})
 
-	s.DB.LogMode(true)
+	s.DB, err = gorm.Open(dialector)
+	require.NoError(s.T(), err)
 
 	maxLifetime := 10 * time.Second
 	maxIdle, maxOpenConnection := 5, 5
@@ -53,9 +68,7 @@ var (
 
 func (s *Suite) Test_user_repository_Insert(){
 	s.mock.ExpectBegin()
-	s.mock.ExpectQuery("INSERT INTO \"users\" \\(\"id\",\"email\",\"password\"\\) VALUES \\(\\$1,\\$2,\\$3\\) RETURNING \"users\"\\.\"id\"").
-		WithArgs(id, email, password).
-		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(id.String()))
+	s.mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO "users" ("email","password","id") VALUES ($1,$2,$3) RETURNING "id"`)).WithArgs(email, password, id).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(id.String()))
 	s.mock.ExpectCommit()
 
 	s.mock.ExpectQuery("SELECT \\* FROM \"users\" WHERE \"users\"\\.\"id\" \\= \\$1").
@@ -68,7 +81,7 @@ func (s *Suite) Test_user_repository_Insert(){
 }
 
 func (s *Suite) Test_user_repository_Get_User_By_ID(){
-	s.mock.ExpectQuery("SELECT \\* FROM \"users\" WHERE \\(users\\.id \\= \\$1\\) ORDER BY \"users\"\\.\"id\" ASC LIMIT 1").
+	s.mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "users" WHERE users.id = $1 ORDER BY "users"."id" LIMIT 1`)).
 		WithArgs(id).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "email", "password"}).AddRow(id.String(), email, password))
 
@@ -78,7 +91,7 @@ func (s *Suite) Test_user_repository_Get_User_By_ID(){
 }
 
 func (s *Suite) Test_user_repository_Get_User_By_Email(){
-	s.mock.ExpectQuery("SELECT \\* FROM \"users\" WHERE \\(users\\.email \\= \\$1\\) ORDER BY \"users\"\\.\"id\" ASC LIMIT 1").
+	s.mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "users" WHERE users.email = $1 ORDER BY "users"."id" LIMIT 1`)).
 		WithArgs(email).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "email", "password"}).AddRow(id.String(), email, password))
 
