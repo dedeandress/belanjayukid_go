@@ -1,0 +1,608 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>repositories: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">belanjayukid_go/repositories/base.go (37.5%)</option>
+				
+				<option value="file1">belanjayukid_go/repositories/category.go (57.1%)</option>
+				
+				<option value="file2">belanjayukid_go/repositories/postgres.go (0.0%)</option>
+				
+				<option value="file3">belanjayukid_go/repositories/product.go (0.0%)</option>
+				
+				<option value="file4">belanjayukid_go/repositories/productunit.go (57.1%)</option>
+				
+				<option value="file5">belanjayukid_go/repositories/transaction.go (0.0%)</option>
+				
+				<option value="file6">belanjayukid_go/repositories/user.go (56.5%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package repositories
+
+import (
+        "gorm.io/gorm"
+        "strings"
+
+)
+
+func makeFilterFunc(query interface{}, args ...interface{}) func(db *gorm.DB) *gorm.DB <span class="cov8" title="1">{
+        filterFunc := func(db *gorm.DB) *gorm.DB </span><span class="cov8" title="1">{
+                return db.Where(query, args...)
+        }</span>
+        <span class="cov8" title="1">return filterFunc</span>
+}
+
+func makePatternMatchingFilter(keyword string) string <span class="cov0" title="0">{
+        var builder strings.Builder
+        builder.WriteString("%")
+        builder.WriteString(keyword)
+        builder.WriteString("%")
+        return builder.String()
+}</span>
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package repositories
+
+import "belanjayukid_go/models"
+
+type CategoryRepository interface {
+        Insert(category *models.Category)(insertedCategory *models.Category, err error)
+        GetCategoryList()(*[]models.Category, error)
+}
+
+type categoryRepository struct {
+        db *DataSource
+}
+
+var categoryRepo *categoryRepository
+
+func GetCategoryRepository() CategoryRepository <span class="cov0" title="0">{
+        if DBTrx != nil </span><span class="cov0" title="0">{
+                categoryRepo = &amp;categoryRepository{db: DBTrx}
+        }</span> else<span class="cov0" title="0"> {
+                categoryRepo = &amp;categoryRepository{db: DB}
+        }</span>
+
+        <span class="cov0" title="0">return categoryRepo</span>
+}
+
+func (categoryRepo *categoryRepository) Insert(category *models.Category) (insertedCategory *models.Category, err error) <span class="cov8" title="1">{
+        insertedCategory = &amp;models.Category{}
+        res := categoryRepo.db.Create(category).Scan(insertedCategory)
+        if res.Error != nil </span><span class="cov0" title="0">{
+                return nil, res.Error
+        }</span>
+
+        <span class="cov8" title="1">return insertedCategory, nil</span>
+}
+
+func (categoryRepo *categoryRepository) GetCategoryList() (*[]models.Category, error) <span class="cov8" title="1">{
+        var categoryList *[]models.Category
+        res := categoryRepo.db.Find(&amp;categoryList)
+        if res.Error != nil </span><span class="cov0" title="0">{
+                return nil, res.Error
+        }</span>
+
+        <span class="cov8" title="1">return categoryList, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package repositories
+
+import (
+        "belanjayukid_go/configs"
+        "belanjayukid_go/models"
+        "fmt"
+        "gorm.io/driver/postgres"
+        "gorm.io/gorm"
+        "gorm.io/gorm/logger"
+        "strconv"
+        "time"
+
+        _ "gorm.io/driver/postgres"
+)
+
+var (
+        DB    *DataSource
+        DBTrx *DataSource
+)
+
+type DataSource struct {
+        *gorm.DB
+        maxIdleConnection     int
+        maxOpenConnection     int
+        maxConnectionLifetime time.Duration
+}
+
+func InitDBFactory() error <span class="cov0" title="0">{
+        url, err := configs.GetConfigRequired(configs.DATABASE_URL)
+        if err != nil </span><span class="cov0" title="0">{
+                panic(fmt.Errorf("%s", err))</span>
+        }
+        <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                panic(fmt.Errorf("%s", err))</span>
+        }
+        <span class="cov0" title="0">sslMode, err := configs.GetConfigRequired(configs.DB_SSL_MODE)
+        if err != nil </span><span class="cov0" title="0">{
+                panic(fmt.Errorf("%s", err))</span>
+        }
+        <span class="cov0" title="0">logModeString, err := configs.GetConfigRequired(configs.DB_LOG_MODE)
+        if err != nil </span><span class="cov0" title="0">{
+                panic(fmt.Errorf("%s", err))</span>
+        }
+        <span class="cov0" title="0">logMode, err := strconv.ParseBool(logModeString)
+        if err != nil </span><span class="cov0" title="0">{
+                panic(fmt.Errorf("%s", err))</span>
+        }
+
+        <span class="cov0" title="0">if url == "" </span><span class="cov0" title="0">{
+                return fmt.Errorf("Unable to get configuration variable for PostgreSQL, make sure you already set it ")
+        }</span>
+
+        <span class="cov0" title="0">DB, err = databaseConnection(url, sslMode, logMode)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">err = migrateDatabase()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">fmt.Println("Database Connection Started")
+        return nil</span>
+}
+
+func migrateDatabase() error <span class="cov0" title="0">{
+        if err := DB.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`).Error; err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">DB.Model(models.User{})
+        DB.AutoMigrate(
+                models.User{},
+                models.Category{},
+                models.ProductUnit{},
+                models.Product{},
+                models.ProductDetail{},
+                models.Transaction{},
+                models.TransactionDetail{},
+        )
+
+        return nil</span>
+}
+
+func databaseConnection(url string, sslMode string, logMode bool) (*DataSource, error) <span class="cov0" title="0">{
+        dsn := fmt.Sprintf("%s?sslmode=%s", url, sslMode)
+        db, err := gorm.Open(postgres.Open(dsn), &amp;gorm.Config{
+                Logger: logger.Default.LogMode(logger.Info),
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">maxLifetime := 10 * time.Second
+        maxIdle, maxOpenConnection := 5, 5
+        sqlDB, err :=db.DB()
+        if err != nil </span><span class="cov0" title="0">{
+                panic(err.Error())</span>
+        }
+        <span class="cov0" title="0">sqlDB.SetMaxIdleConns(maxIdle)
+        sqlDB.SetMaxOpenConns(maxOpenConnection)
+        sqlDB.SetConnMaxLifetime(maxLifetime)
+        return &amp;DataSource{db, maxIdle, maxOpenConnection, maxLifetime}, nil</span>
+}
+
+func BeginTransaction() <span class="cov0" title="0">{
+        DBTemp := *DB
+        DBTrx = &amp;DataSource{
+                DB:                    DBTemp.Begin(),
+                maxIdleConnection:     DBTemp.maxIdleConnection,
+                maxOpenConnection:     DBTemp.maxOpenConnection,
+                maxConnectionLifetime: DBTemp.maxConnectionLifetime,
+        }
+}</span>
+
+func RollbackTransaction() <span class="cov0" title="0">{
+        DBTrx.DB.Rollback()
+        DBTrx = nil
+}</span>
+
+func CommitTransaction() <span class="cov0" title="0">{
+        DBTrx.DB.Commit()
+        DBTrx = nil
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package repositories
+
+import (
+        "belanjayukid_go/models"
+        "github.com/kr/pretty"
+        "gorm.io/gorm"
+        "log"
+)
+
+type ProductRepository interface {
+        GetProductList()([]models.Product, error)
+        GetProductDetailByProductDetailID(productDetailID string)(productDetail *models.ProductDetail, err error)
+        UpdateStock(productID string, stock int)(err error)
+}
+
+type productRepository struct {
+        db *DataSource
+}
+
+var productRepo *productRepository
+
+func GetProductRepository() ProductRepository<span class="cov0" title="0">{
+        if DBTrx != nil </span><span class="cov0" title="0">{
+                productRepo = &amp;productRepository{db: DBTrx}
+        }</span>else<span class="cov0" title="0"> {
+                productRepo = &amp;productRepository{db: DB}
+        }</span>
+
+        <span class="cov0" title="0">return productRepo</span>
+}
+
+
+func (p productRepository) GetProductList() ([]models.Product, error) <span class="cov0" title="0">{
+        var productList []models.Product
+        res := productRepo.db.Preload("ProductDetails").Preload("ProductDetails.ProductUnit").Preload("Category").Find(&amp;productList)
+        if res.Error != nil </span><span class="cov0" title="0">{
+                return nil, res.Error
+        }</span>
+
+        <span class="cov0" title="0">log.Print(pretty.Sprint(productList))
+
+        return productList, nil</span>
+}
+
+func (p productRepository) GetProductDetailByProductDetailID(productDetailID string) (productDetail *models.ProductDetail, err error) <span class="cov0" title="0">{
+        productDetail = &amp;models.ProductDetail{}
+        res := productRepo.db.Preload("Product").Preload("ProductUnit").Scopes(filterByProductDetailID(productDetailID)).Find(&amp;productDetail)
+        if res.Error != nil</span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return productDetail, err</span>
+}
+
+func (p productRepository) UpdateStock(productID string, stock int) (err error) <span class="cov0" title="0">{
+        err = productRepo.db.Model(models.Product{}).Where("id = ?", productID).Update("stock", stock).Error
+        return err
+}</span>
+
+func filterByProductDetailID(productDetailID string) func(db *gorm.DB) *gorm.DB <span class="cov0" title="0">{
+        return makeFilterFunc("product_details.id = ?", productDetailID)
+}</pre>
+		
+		<pre class="file" id="file4" style="display: none">package repositories
+
+import "belanjayukid_go/models"
+
+type ProductUnitRepository interface {
+        Insert(productUnit *models.ProductUnit)(insertedProductUnit *models.ProductUnit, err error)
+        GetProductUnitList()(*[]models.ProductUnit, error)
+}
+
+type productUnitRepository struct {
+        db *DataSource
+}
+
+var productUnitRepo *productUnitRepository
+
+func GetProductUnitRepository() ProductUnitRepository <span class="cov0" title="0">{
+        if DBTrx != nil </span><span class="cov0" title="0">{
+                productUnitRepo = &amp;productUnitRepository{db: DBTrx}
+        }</span> else<span class="cov0" title="0"> {
+                productUnitRepo = &amp;productUnitRepository{db: DB}
+        }</span>
+
+        <span class="cov0" title="0">return productUnitRepo</span>
+}
+
+func (productUnitRepo *productUnitRepository) Insert(productUnit *models.ProductUnit) (insertedProductUnit *models.ProductUnit, err error) <span class="cov8" title="1">{
+        insertedProductUnit = &amp;models.ProductUnit{}
+        res := productUnitRepo.db.Create(productUnit).Scan(insertedProductUnit)
+        if res.Error != nil </span><span class="cov0" title="0">{
+                return nil, res.Error
+        }</span>
+
+        <span class="cov8" title="1">return insertedProductUnit, nil</span>
+}
+
+func (productUnitRepo productUnitRepository) GetProductUnitList() (*[]models.ProductUnit, error) <span class="cov8" title="1">{
+        var productUnitList *[]models.ProductUnit
+        res := productUnitRepo.db.Find(&amp;productUnitList)
+        if res.Error != nil </span><span class="cov0" title="0">{
+                return nil, res.Error
+        }</span>
+
+        <span class="cov8" title="1">return productUnitList, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package repositories
+
+import (
+        "belanjayukid_go/enums"
+        "belanjayukid_go/models"
+        "github.com/google/uuid"
+        "github.com/shopspring/decimal"
+        "gorm.io/gorm"
+        "gorm.io/gorm/clause"
+        "time"
+)
+
+type TransactionRepository interface {
+        Insert()(transaction *models.Transaction, err error)
+        Update(transactionDetails []models.TransactionDetail) (err error)
+        GetTransaction(transactionID string) (*models.Transaction, error)
+        GetTransactionList(transactionID *string, status *int) (*[]models.Transaction, error)
+        GetTransactionDetailByTransactionID(transactionID string) (*[]models.TransactionDetail, error)
+        UpdateTrxStatus(transactionID string, status int) (err error)
+        UpdateTrxTotalPrice(transactionID string, totalPrice decimal.Decimal) (err error)
+}
+
+type transactionRepository struct {
+        db *DataSource
+}
+
+var transactionRepo *transactionRepository
+
+func GetTransactionRepository() TransactionRepository <span class="cov0" title="0">{
+        if DBTrx != nil </span><span class="cov0" title="0">{
+                transactionRepo = &amp;transactionRepository{db: DBTrx}
+        }</span> else<span class="cov0" title="0"> {
+                transactionRepo = &amp;transactionRepository{db: DB}
+        }</span>
+
+        <span class="cov0" title="0">return transactionRepo</span>
+}
+
+func (t *transactionRepository) Insert() (transaction *models.Transaction, err error)  <span class="cov0" title="0">{
+        transaction = &amp;models.Transaction{}
+        if err := transactionRepo.db.Create(models.Transaction{ID: uuid.New(), Date: time.Now(), Status: enums.INIT_TRANSACTION, TotalPrice: decimal.NewFromInt(0)}).Scan(&amp;transaction).Error; err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return transaction, err</span>
+}
+
+func (t *transactionRepository) Update(transactionDetails []models.TransactionDetail) (err error) <span class="cov0" title="0">{
+        err = transactionRepo.db.Clauses(
+                clause.OnConflict{
+                        Columns: []clause.Column{{Name: "id"}},
+                        DoUpdates: clause.AssignmentColumns([]string{"number_of_purchases"}),
+                }).Create(&amp;transactionDetails).Error
+        return err
+}</span>
+
+func (t *transactionRepository) UpdateTrxStatus(transactionID string, status int) (err error) <span class="cov0" title="0">{
+        err = transactionRepo.db.Model(models.Transaction{}).Where("id = ?", transactionID).Update("status", status).Error
+        return err
+}</span>
+
+
+func (t *transactionRepository) UpdateTrxTotalPrice(transactionID string, totalPrice decimal.Decimal) (err error) <span class="cov0" title="0">{
+        err = transactionRepo.db.Model(models.Transaction{}).Where("id = ?", transactionID).Update("total_price", totalPrice).Error
+        return err
+}</span>
+
+
+func (t *transactionRepository) GetTransaction(transactionID string) (*models.Transaction, error) <span class="cov0" title="0">{
+        var transaction *models.Transaction
+        res := transactionRepo.db.Scopes(filterTransactionByID(transactionID)).Find(&amp;transaction)
+        if res.Error != nil </span><span class="cov0" title="0">{
+                return nil, res.Error
+        }</span>
+
+        <span class="cov0" title="0">return transaction, nil</span>
+}
+
+func (t *transactionRepository) GetTransactionDetailByTransactionID(transactionID string) (*[]models.TransactionDetail, error) <span class="cov0" title="0">{
+        var transactionDetails *[]models.TransactionDetail
+        res := transactionRepo.db.Model(models.TransactionDetail{}).Preload("Transaction").Preload("ProductDetail").Scopes(filterTransactionDetailsByTransactionID(transactionID)).Find(&amp;transactionDetails)
+        if res.Error != nil </span><span class="cov0" title="0">{
+                return nil, res.Error
+        }</span>
+        <span class="cov0" title="0">return transactionDetails, nil</span>
+}
+
+func (t *transactionRepository) GetTransactionList(transactionID *string, status *int) (*[]models.Transaction, error) <span class="cov0" title="0">{
+
+        scopes := make([]func(db *gorm.DB) *gorm.DB, 0)
+        if transactionID != nil </span><span class="cov0" title="0">{
+                scopes = append(scopes, filterTransactionByID(*transactionID))
+        }</span>
+        <span class="cov0" title="0">if status != nil </span><span class="cov0" title="0">{
+                scopes = append(scopes, filterTransactionByStatus(*status))
+        }</span>
+
+        <span class="cov0" title="0">var transactions *[]models.Transaction
+        res := transactionRepo.db.Model(models.Transaction{}).Scopes(scopes...).Find(&amp;transactions)
+        if res.Error != nil </span><span class="cov0" title="0">{
+                return nil, res.Error
+        }</span>
+
+        <span class="cov0" title="0">return transactions, nil</span>
+}
+
+func filterTransactionDetailsByTransactionID(transactionID string) func(db *gorm.DB) *gorm.DB <span class="cov0" title="0">{
+        return makeFilterFunc("transaction_details.transaction_id = ?", transactionID)
+}</span>
+
+func filterTransactionByStatus(status int) func(db *gorm.DB) *gorm.DB <span class="cov0" title="0">{
+        return makeFilterFunc("status = ?", status)
+}</span>
+
+func filterTransactionByID(transactionID string) func(db *gorm.DB) *gorm.DB <span class="cov0" title="0">{
+        return makeFilterFunc("id = ?", transactionID)
+}</pre>
+		
+		<pre class="file" id="file6" style="display: none">package repositories
+
+import (
+        "belanjayukid_go/models"
+        "gorm.io/gorm"
+)
+
+type UserRepository interface {
+        Insert(user *models.User) (insertedUser *models.User, err error)
+        GetUserByID(userID string) (user *models.User, err error)
+        GetUserByEmail(email string) (user *models.User, err error)
+        Update(user *models.User) (*models.User, error)
+}
+
+type userRepository struct {
+        db *DataSource
+}
+
+var userRepo *userRepository
+
+func GetUserRepository() UserRepository <span class="cov0" title="0">{
+        if DBTrx != nil </span><span class="cov0" title="0">{
+                userRepo = &amp;userRepository{db: DBTrx}
+        }</span> else<span class="cov0" title="0"> {
+                userRepo = &amp;userRepository{db: DB}
+        }</span>
+        <span class="cov0" title="0">return userRepo</span>
+}
+
+func (userRepo *userRepository) Insert(user *models.User) (insertedUser *models.User, err error) <span class="cov8" title="1">{
+        insertedUser = &amp;models.User{}
+        if err := userRepo.db.Create(user).Scan(insertedUser).Error; err != nil </span><span class="cov0" title="0">{
+                // fmt.Errorf("Error while inserting record in database (%s) ", err.Error())
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return insertedUser, err</span>
+}
+
+func (userRepo *userRepository) GetUserByID(userID string) (user *models.User, err error) <span class="cov8" title="1">{
+        user = &amp;models.User{}
+        res := userRepo.db.Scopes(filterUsersByID(userID)).First(&amp;user)
+        if err := res.Error; err != nil </span><span class="cov0" title="0">{
+                // fmt.Errorf("Error querying for user for user with ID %s and error: %s", userID, err.Error())
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return user, err</span>
+}
+
+func (userRepo *userRepository) GetUserByEmail(email string) (user *models.User, err error) <span class="cov8" title="1">{
+        user = &amp;models.User{}
+        res := userRepo.db.Scopes(filterUsersByEmail(email)).First(&amp;user)
+        if err := res.Error; err != nil </span><span class="cov0" title="0">{
+                // fmt.Errorf("Error querying for user for user with ID %s and error: %s", userID, err.Error())
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return user, err</span>
+}
+
+func (userRepo *userRepository) Update(user *models.User) (*models.User, error) <span class="cov0" title="0">{
+        if err := userRepo.db.Model(&amp;user).Updates(user).First(&amp;user).Error; err != nil </span><span class="cov0" title="0">{
+                // fmt.Errorf("Error while updating record in database (%s) ", err.Error())
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return user, nil</span>
+}
+
+func filterUsersByID(userID string) func(db *gorm.DB) *gorm.DB <span class="cov8" title="1">{
+        return makeFilterFunc("users.id = ?", userID)
+}</span>
+
+func filterUsersByEmail(email string) func(db *gorm.DB) *gorm.DB <span class="cov8" title="1">{
+        return makeFilterFunc("users.email = ?", email)
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

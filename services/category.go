@@ -5,14 +5,13 @@ import (
 	"belanjayukid_go/models"
 	"belanjayukid_go/params"
 	"belanjayukid_go/repositories"
-	"github.com/google/uuid"
 )
 
 func CreateCategory(request *params.CategoryRequest) params.Response {
 	repositories.BeginTransaction()
 	categoryRepo := repositories.GetCategoryRepository()
 
-	category, err := categoryRepo.Insert(models.Category{ID: uuid.New(), Name: request.Name})
+	category, err := categoryRepo.Insert(&models.Category{Name: request.Name})
 	if err != nil {
 		return createResponseError(
 			ResponseService{

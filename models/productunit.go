@@ -3,6 +3,6 @@ package models
 import "github.com/google/uuid"
 
 type ProductUnit struct {
-	ID uuid.UUID `gorm:"NOT NULL;PRIMARY_KEY"`
+	ID *uuid.UUID `gorm:"Type:uuid;NOT NULL;PRIMARY_KEY;DEFAULT:uuid_generate_v1()" json:"id" db:"id"`
 	Name string
 }

@@ -3,7 +3,7 @@ package repositories
 import "belanjayukid_go/models"
 
 type CategoryRepository interface {
-	Insert(category models.Category)(insertedCategory *models.Category, err error)
+	Insert(category *models.Category)(insertedCategory *models.Category, err error)
 	GetCategoryList()(*[]models.Category, error)
 }
 
@@ -23,7 +23,7 @@ func GetCategoryRepository() CategoryRepository {
 	return categoryRepo
 }
 
-func (c categoryRepository) Insert(category models.Category) (insertedCategory *models.Category, err error) {
+func (categoryRepo *categoryRepository) Insert(category *models.Category) (insertedCategory *models.Category, err error) {
 	insertedCategory = &models.Category{}
 	res := categoryRepo.db.Create(category).Scan(insertedCategory)
 	if res.Error != nil {
@@ -33,7 +33,7 @@ func (c categoryRepository) Insert(category models.Category) (insertedCategory *
 	return insertedCategory, nil
 }
 
-func (c categoryRepository) GetCategoryList() (*[]models.Category, error) {
+func (categoryRepo *categoryRepository) GetCategoryList() (*[]models.Category, error) {
 	var categoryList *[]models.Category
 	res := categoryRepo.db.Find(&categoryList)
 	if res.Error != nil {

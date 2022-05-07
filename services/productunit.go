@@ -5,14 +5,13 @@ import (
 	"belanjayukid_go/models"
 	"belanjayukid_go/params"
 	"belanjayukid_go/repositories"
-	"github.com/google/uuid"
 )
 
 func CreateProductUnit(request *params.ProductUnitRequest) params.Response {
 	repositories.BeginTransaction()
 	productUnitRepo := repositories.GetProductUnitRepository()
 
-	productUnit, err := productUnitRepo.Insert(models.ProductUnit{ID: uuid.New(), Name: request.Name})
+	productUnit, err := productUnitRepo.Insert(&models.ProductUnit{Name: request.Name})
 	if err != nil {
 		return createResponseError(
 			ResponseService{
